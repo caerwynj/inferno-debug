@@ -49,8 +49,17 @@ main(argv: list of string)
 	last: list of string;
 	exp: array of ref Exp;
 	sym: ref Sym;
+	defprog: string;
+	defargs: list of string;
 
 	in := bufio->fopen(sys->fildes(0), Bufio->OREAD);
+	if(argv != nil) {
+		argv = tl argv;
+		if(argv != nil) {
+			defprog = hd argv;
+			defargs = tl argv;
+		}
+	}
 	print("> ");
 	while ((line = in.gets('\n')) != nil) {
 		(n, l) := sys->tokenize(line, " \n\r\t");
@@ -62,9 +71,17 @@ main(argv: list of string)
 				prog.kill();
 			exit;
 		"run" =>
-			(prog, s) = debug->startprog(hd tl l, ".", nil, tl l);
-			if(prog == nil)
-				print("error %s\n", s);
+			if (len l > 1) {
+				(prog, s) = debug->startprog(hd tl l, ".", nil, tl l);
+				if(prog == nil)
+					print("error %s\n", s);
+			} else if (defprog != nil) {
+				(prog, s) = debug->startprog(defprog, ".", nil, defargs);
+				if(prog == nil)
+					print("error %s\n", s);
+			} else {
+				print("error no program\n");
+			}
 		"cont" or "c" =>
 			s = prog.cont();
 			if(s != nil)
@@ -190,7 +207,8 @@ main(argv: list of string)
 		"!" =>
 			sh->system(nil, line[1:]);
 		"help" =>
-			print("run file.dis args	; program to debug with args\n");
+			print("run [file.dis args]	; program to debug with args\n");
+			print("			; uses command line default if omitted\n");
 			print("brk lineno		; set breakpoint in current file\n");
 			print("src file.b		; source file for listing\n");
 			print("next			; step over next statement\n");
@@ -226,7 +244,8 @@ stack(prog: ref Prog)
 	(file, rest) := str->splitl(src, ":");
 	(lnum, pos) := str->splitl(rest[1:], ".");
 	currline = int(lnum);
-	sh->system(nil, sprint("sed -n '%sp' %s", lnum, file));
+	if(srcfile != nil)
+		sh->system(nil, sprint("sed -n '%sp' %s", lnum, srcfile));
 	expand("tos");
 }
 
