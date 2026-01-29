@@ -82,6 +82,12 @@ main(argv: list of string)
 			} else {
 				print("error no program\n");
 			}
+			if(prog != nil) {
+				s = prog.step(Debug->StepStmt);
+				if(s != nil)
+					print("%s\n", s);
+				stackinit(prog);
+			}
 		"cont" or "c" =>
 			s = prog.cont();
 			if(s != nil)
@@ -120,27 +126,7 @@ main(argv: list of string)
                		(pgrp, user, state, mod) := prog.status();
 			print("%d %s %s %s\n", pgrp, user, state, mod);
 		"stack" or "bt" =>
-			(exp, s) = prog.stack();
-			if(s != nil) {
-				print("%s\n", s);
-				continue;
-			}
-			for(i:=0; i < len exp; i++) {
-				exp[i].m.stdsym();
-				exp[i].findsym();
-				print("%s %s\n", exp[i].name, exp[i].srcstr());
-			}
-			disfile = exp[0].m.dis();
-			sblfile = exp[0].m.sbl();
-			if (sblfile != nil) {
-				srcfile = str->replace(sblfile, ".sbl", ".b", -1);
-				(sym, s) = debug->sym(sblfile);
-				if(s != nil)
-					print("err %s\n", s);
-			}
-			print("sbl %s \n", sblfile);
-			print("dis %s \n", disfile);
-			print("src %s \n", srcfile);
+			stackinit(prog);
 		"sym" =>
 			(sym, s) = debug->sym(hd tl l);
 			if(s != nil){
@@ -268,3 +254,32 @@ expand(symbol: string)
 		}
 	}
 }	
+
+stackinit(prog: ref Prog)
+{
+	s: string;
+	sym: ref Sym;
+	exp: array of ref Exp;
+
+	(exp, s) = prog.stack();
+	if(s != nil) {
+		print("%s\n", s);
+		return;
+	}
+	for(i:=0; i < len exp; i++) {
+		exp[i].m.stdsym();
+		exp[i].findsym();
+		print("%s %s\n", exp[i].name, exp[i].srcstr());
+	}
+	disfile = exp[0].m.dis();
+	sblfile = exp[0].m.sbl();
+	if(sblfile != nil) {
+		srcfile = str->replace(sblfile, ".sbl", ".b", -1);
+		(sym, s) = debug->sym(sblfile);
+		if(s != nil)
+			print("err %s\n", s);
+	}
+	print("sbl %s \n", sblfile);
+	print("dis %s \n", disfile);
+	print("src %s \n", srcfile);
+}

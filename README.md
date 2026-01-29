@@ -15,6 +15,6 @@ It uses the Inferno module `debug(2)` to interface with the inferno
 
 To see the documentation
 ```
-inferno man debug
-inferno man prog
+inferno man debug   # The limbo module interface
+inferno man prog    # The inferno device interface
 ```
