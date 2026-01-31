@@ -1,11 +1,11 @@
 # compile limbo .b file
 ```
-limbo src.b
+limbo debug.b
 ```
 
 # build the project
 ```
-mk 
+mk install
 ```
 
 # execute a .dis file
@@ -17,3 +17,15 @@ inferno ./debug
 > next
 ```
 
+# test the debug command
+```
+echo -e "run\nnext\nprint bufio\nquit" |inferno debug /dis/ls.dis
+cd test && mk         # run the test suite
+```
+
+# docs
+Get the documentation for module and device interfaces.
+```
+inferno man debug   # man page for the debug limbo module
+inferno man prog    # man page for the prog device to inspect running process
+```

@@ -1,0 +1,14 @@
+<$ROOT/mkconfig
+
+TEST=`{ls *.test}
+TESTOUT=${TEST:%.test=%.testout}
+
+%.testout:  %.test  ../dis/debug.dis
+	cat $stem.test end |inferno debug > $stem.testout
+
+
+all:V: $TESTOUT 
+
+clean:V:
+	rm *.testout
+

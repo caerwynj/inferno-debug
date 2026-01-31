@@ -1,0 +1,4 @@
+run /dis/ls.dis /
+next
+p argv.hd
+p argv.tl.hd

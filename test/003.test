@@ -1,0 +1,4 @@
+run /dis/ls.dis
+next
+next
+print bufio

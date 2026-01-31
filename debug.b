@@ -190,6 +190,9 @@ main(argv: list of string)
 		"expand" =>
 			if(len l > 1)
 				expand(hd tl l);
+		"print" or "p" =>
+			if(len l > 1)
+				pr(hd tl l);
 		"!" =>
 			sh->system(nil, line[1:]);
 		"help" =>
@@ -208,6 +211,7 @@ main(argv: list of string)
 			print("stack			; print stack\n");
 			print("list begin,end		; list lines from source file\n");
 			print("expand symbol		; expand and display value of symbol\n");
+			print("print symbol		; print value of symbol\n");
 			print("quit 			; quit\n");
 		* =>
 			print("unknown %s\n", hd l);
@@ -253,7 +257,90 @@ expand(symbol: string)
 		* => print("%s %s\n", exp[i].name, exp[i].val().t0);
 		}
 	}
-}	
+}
+
+pr(symbol: string)
+{
+	exp: ref Exp;
+	exps: array of ref Exp;
+	s: string;
+
+	if(symbol == nil)
+		return;
+
+	if(localvars == nil && argvars == nil && modulevars == nil && tos != nil)
+		expand("tos");
+
+	(n, parts) := sys->tokenize(symbol, ".");
+	if(n == 0 || parts == nil)
+		return;
+
+	top := hd parts;
+	rest := tl parts;
+
+	case top {
+	"locals" => exp = localvars;
+	"args" => exp = argvars;
+	"module" => exp = modulevars;
+	* =>
+		if(localvars != nil) {
+			exps = localvars.expand();
+			for(i:=0; i < len exps; i++) {
+				if(exps[i].name == top) {
+					exp = exps[i];
+					break;
+				}
+			}
+		}
+		if(exp == nil && argvars != nil) {
+			exps = argvars.expand();
+			for(i:=0; i < len exps; i++) {
+				if(exps[i].name == top) {
+					exp = exps[i];
+					break;
+				}
+			}
+		}
+		if(exp == nil && modulevars != nil) {
+			exps = modulevars.expand();
+			for(i:=0; i < len exps; i++) {
+				if(exps[i].name == top) {
+					exp = exps[i];
+					break;
+				}
+			}
+		}
+	}
+
+	if(exp == nil) {
+		print("err unknown %s\n", symbol);
+		return;
+	}
+
+	for(p := rest; p != nil; p = tl p) {
+		exps = exp.expand();
+		exp = nil;
+		for(i:=0; i < len exps; i++) {
+			if(exps[i].name == hd p) {
+				exp = exps[i];
+				break;
+			}
+		}
+		if(exp == nil) {
+			print("err unknown %s\n", symbol);
+			return;
+		}
+	}
+
+	canexpand: int;
+	(s, canexpand) = exp.val();
+	print("%s\n", s);
+	if(canexpand) {
+		exps = exp.expand();
+		for(i:=0; i < len exps; i++)
+			print("%s %s\n", exps[i].name, exps[i].val().t0);
+	}
+}
 
 stackinit(prog: ref Prog)
 {
